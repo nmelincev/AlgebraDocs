@@ -1,0 +1,22 @@
+[
+    {
+        "Ime korisnika": "ivan",
+        "Omiljeno jelo": "hamburger"
+    },
+    {
+        "Ime korisnika": "marko",
+        "Omiljeno jelo": "pizza"
+    },
+    {
+        "Ime korisnika": "ivan",
+        "Omiljeno jelo": "burek"
+    },
+    {
+        "Ime korisnika": "<script><script>",
+        "Omiljeno jelo": "mesna\u0161truca"
+    },
+    {
+        "Ime korisnika": "&lt;script&gt;&lt;script&gt;",
+        "Omiljeno jelo": "mesna&scaron;truca"
+    }
+]
