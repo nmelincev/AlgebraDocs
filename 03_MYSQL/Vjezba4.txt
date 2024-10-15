@@ -1,0 +1,281 @@
+use adventureworkshop;
+
+-- ispiši kupce i imena grada u kojima žive
+select
+	ku.IDKupac,
+    ku.Ime, 
+    ku.Prezime, 
+    ku.Email, 
+    ku.Telefon, 
+    gr.Naziv as Grad
+from 
+	kupac as ku, grad as gr
+where 
+	ku.GradID = gr.IDGrad;
+
+-- ispiši račune zajedno s detaljima o kupcu i proizvodu
+select distinct 
+	ra.IDRacun,
+	ra.BrojRacuna,
+	ra.DatumIzdavanja, 
+	ku.Ime, 
+	ku.Prezime,
+	ku.Email,
+	ku.Telefon,
+	pr.Naziv as Proizvod,
+	pr.Boja,
+	st.Kolicina,
+	st.CijenaPoKomadu,
+	st.UkupnaCijena
+from 
+	racun as ra
+left join
+	kupac as ku on ra.KupacID = ku.IDKupac
+left join
+	stavka as st on ra.IDRacun = st.RacunID
+left join
+	proizvod as pr on st.ProizvodID = pr.IDProizvod
+group by
+	ra.IDRacun; 
+
+-- izračunaj prosječnu cijenu proizvoda u svakoj kategoriji
+select
+	ka.Naziv as Proizvod,
+    round(avg(pr.CijenaBezPDV), 2) as ProsjecnaVrijednost
+from
+	kategorija as ka
+join
+	potkategorija as po
+on
+	ka.IDKategorija = po.KategorijaID
+join
+	proizvod as pr
+on
+	po.IDPotkategorija = pr.PotkategorijaID 
+group by
+	ka.Naziv;
+    
+-- pronađi najpopularniji proizvod na temelju količine u računima
+select
+	pr.Naziv as Proizvod,
+    sum(st.Kolicina) as UkupnaKolicina
+from
+	proizvod as pr
+left join
+	stavka as st
+on
+	pr.IDProizvod = st.ProizvodID
+left join
+	racun as ra
+on
+	st.RacunID = ra.IDRacun
+group by
+	pr.Naziv
+order by
+	UkupnaKolicina desc limit 1;
+    
+ -- prikaz proizvoda koji nisu niti jednom kupljeni 
+select
+	pr.Naziv as Proizvod
+from
+	proizvod as pr
+where
+	pr.IDProizvod not in (select st.ProizvodID from stavka as st);
+    
+-- Prikaži ukupni iznos prodaje za svaki grad
+select
+	gr.Naziv,
+    round(sum(st.UkupnaCijena),2) as UkupanIznos
+from
+	grad as gr
+left join
+	kupac as ku
+on
+	gr.IDGrad = ku.GradID
+left join
+	racun as ra
+on
+	ku.IDKupac = ra.KupacID
+left join
+	stavka as st
+on
+	ra.IDRacun = st.RacunID
+group by
+	gr.Naziv;
+    
+-- Popis država koje nemaju gradove
+select
+	dr.Naziv
+from
+	drzava as dr
+where
+	dr.IDDrzava in
+    (select
+		gr.Naziv
+	from
+		grad as gr
+	where 
+		gr.DrzavaID is null);
+        
+-- Pronađi grad s najvećim brojem narudžbi
+select
+	gr.Naziv as Grad
+from
+	grad as gr
+where gr.IDGrad =
+	(select
+		ku.GradID
+	from
+		kupac as ku
+	join
+		racun as ra
+	on
+		ku.IDKupac = ra.KupacID
+	group by
+		ku.GradID
+	order by
+		count(ra.IDRacun) desc limit 1);
+        
+-- Prikaži proizvode s cijenama iznad prosječne cijene u svojoj kategoriji
+select
+	pr.IDProizvod,
+    pr.Naziv as Proizvod,
+    pr.CijenaBezPDV,
+	ka.Naziv as Kategorija
+from
+	proizvod as pr
+join potkategorija as po on pr.PotkategorijaID = po.IDPotkategorija
+join kategorija as ka on po.KategorijaID = ka.IDKategorija
+where
+	pr.CijenaBezPDV > (
+    select avg(pr2.CijenaBezPDV)
+    from
+		proizvod as pr2
+        join potkategorija as po2 on pr2.PotkategorijaID = po2.IDPotkategorija
+        join kategorija as ka2 on po2.KategorijaID = ka2.IDKategorija
+	where
+		ka2.IDKategorija = ka.IDKategorija
+	);
+
+-- Identificiraj kupce koji su kupovali više od jednog puta u različitim danima
+select
+	ku.*
+from
+	kupac as ku
+where
+	ku.IDKupac in (
+	select
+		ra.KupacID
+	from
+		racun as ra
+	group by
+		ra.KupacID
+	having
+		count(distinct ra.DatumIzdavanja) > 1
+	);
+
+-- Izračunaj ukupan broj prodanih proizvoda za svaku kategoriju proizvoda
+select
+	ka.Naziv as Proizvod,
+    (
+		select
+			sum(st.Kolicina)
+		from
+			stavka as st
+		left join proizvod as pr on	st.ProizvodID = pr.IDProizvod
+		left join potkategorija as po on pr.PotkategorijaID = po.IDPotkategorija
+		where
+			po.IDPotkategorija = ka.IDKategorija
+	) as UkupanBrojProdanihProizvoda
+from 
+	kategorija as ka;
+    
+-- Pronađi mjesec s najvećim obujmom prodaje
+    select
+		month(ra.DatumIzdavanja) as Mjesec,
+		sum(st.Kolicina) as ObujamProdaje
+	from
+		racun as ra
+	join stavka as st on st.RacunID = ra.IDRacun
+	group by
+		Mjesec
+	order by 
+		ObujamProdaje DESC
+	limit 1;
+
+-- Prikaz razlike u količinama proizvoda između dva najprodavanija proizvoda
+select
+    (select
+		sum(kolicina) 
+	from
+		stavka
+	group by
+		ProizvodID
+	order by 
+		sum(kolicina) desc
+	limit 1) -
+    (select 
+		sum(kolicina) 
+	from
+		stavka
+	group by
+		ProizvodID 
+	order by
+		sum(kolicina) desc
+	limit 1
+    offset 1) AS RazlikaUKolicinama;
+
+-- Popis svih proizvoda koji nikada nisu prodani na istom računu s Proizvodom ID 1
+select distinct
+	pr.IDProizvod,
+	pr.Naziv
+from
+	proizvod as pr
+where
+	pr.IDProizvod not in (
+		select distinct st.ProizvodID
+        from
+			stavka as st
+		inner join
+			stavka as st2 on st.IDStavka = st2.IDStavka
+		where
+			st2.ProizvodID = 1
+	)
+and
+	pr.IDProizvod <> 1;
+
+
+-- Izračunaj prosječni iznos prodaje po računu za svakog prodavača
+select
+	ko.Ime,
+    ko.Prezime,
+    round(avg(st.UkupnaCijena), 2) as ProsjecniIznos
+from
+	komercijalist as ko
+join racun as ra on 	ko.IDKomercijalist = ra.KomercijalistID
+right join stavka as st on ra.IDRacun = st.RacunID
+group by
+	ko.IDKomercijalist
+order by
+	ProsjecniIznos DESC;
+
+-- Pronađi državu s najraznovrsnijim spektrom kategorija proizvoda u narudžbama
+select
+    dr.IDDrzava,
+    dr.Naziv,
+    count(distinct po.KategorijaID) AS BrojKategorija
+from
+    drzava as dr
+    inner join grad as gr on dr.IDDrzava = gr.DrzavaID
+    inner join kupac as ku on gr.IDGrad = ku.GradID
+    inner join racun as ra on ku.IDKUpac = ra.KupacID
+    inner join stavka as st on ra.IDRacun = st.RacunID
+    inner join proizvod as pr on st.ProizvodID = pr.IDProizvod
+    inner join potkategorija as po on pr.PotkategorijaID = po.IDPotkategorija
+    inner join kategorija as ka on po.KategorijaID = ka.IDKategorija
+group by
+    dr.IDDrzava,
+    dr.Naziv
+order by
+    BrojKategorija desc
+limit 1;

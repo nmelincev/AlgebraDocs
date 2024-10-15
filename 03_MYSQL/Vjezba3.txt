@@ -1,0 +1,31 @@
+use adventureworkshop;
+
+-- 1. zadatak
+select * from kreditnakartica;
+
+-- 2. zadatak
+select * from proizvod
+where MinimalnaKolicinaNaSkladistu < 50;
+
+-- 3. zadatak
+select * from racun
+where KupacID = 1;
+
+-- 4. zadatak
+select * from proizvod
+where PotkategorijaID is null;
+
+-- 5. zadatak
+select drzava.Naziv as Drzava_s_najvecim_brojem_gradova
+from drzava
+where drzava.IDDrzava =
+(select grad.DrzavaID
+from grad
+group by grad.DrzavaID
+order by count(grad.IDGrad) desc
+limit 1
+);
+
+-- 6. zadatak
+select * from proizvod
+where MinimalnaKolicinaNaSkladistu < (select avg(MinimalnaKolicinaNaSkladistu) from proizvod);
