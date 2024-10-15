@@ -1,0 +1,18 @@
+{
+    "name": "nmelincevc/vjezba",
+    "type": "project",
+    "require-dev": {
+        "phpunit/phpunit": "^11.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "Nmelincev\\Vjezba\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Nenad Melinčević",
+            "email": "nenad.melincevic@gmail.com"
+        }
+    ]
+}
