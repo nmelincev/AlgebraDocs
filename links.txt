@@ -1,0 +1,9 @@
+https://www.w3schools.com/html/default.asp
+https://www.w3schools.com/php/default.asp
+https://www.php.net/manual/en/
+https://www.w3schools.com/mysql/mysql_rdbms.asp
+https://laravel.com/docs/11.x
+
+https://github.com/tkescec-algebra/algebra-crm
+https://github.com/tkescec-algebra/laravel-algebra-blog
+https://github.com/tkescec-algebra/algebra-blog-api
